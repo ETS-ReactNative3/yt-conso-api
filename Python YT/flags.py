@@ -10,5 +10,3 @@ class Flag:
         print(self.string + " " + str(self.number))
         self.number += 1
         
-    
-    
