@@ -62,10 +62,11 @@ scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
 #driver.find_elements_by_id("channel-name")[0].
 
 '''
-How to scroll down
+How to scroll down -- DONE
 https://selenium-python.readthedocs.io/faq.html?highlight=is#how-to-scroll-down-to-the-bottom-of-a-page
 '''
 
+'''
 def foo():
     print("foo")
 
@@ -78,6 +79,21 @@ def zoo():
 l = {1:foo, 2:bar, 3:zoo}
 for x in l.keys():
     l[x]()
+'''
+
+import requests as rq
+
+r = rq.post("http://test.netops.fr/api/sessions", headers={"accept":"application/ld+json", "Content-Type": "application/ld+json"}, data={"id":"110100"})
+
+
+
+
+
+
+
+
+
+
 
 
 '''
@@ -113,6 +129,10 @@ def z():
     YouTube_Accept_Cookies()
     time.sleep(0.5)
     YouTube_Deny_Log_In()
+
+
+def scrollDown():
+    driver.execute_script("window.scrollBy(0,1500);")
 
 
 def find_video():
@@ -248,16 +268,16 @@ def YouTube_FireFox_Log_In():
 def YouTube_FireFox_Accept_Cookies():
     driver.find_element_by_css_selector("div.VfPpkd-RLmnJb").click()
 
-def YouTube_Find_First_Video_Link():
-    driver.get("https://www.youtube.com/")
-    time.sleep(1)
-    driver.find_element_by_xpath("//yt-button-renderer/a/paper-button/yt-formatted-string").click()
-    time.sleep(1)
-    driver.switch_to.frame("iframe")
-    driver.find_element_by_css_selector("div#introAgreeButton").click()
-    time.sleep(1)
-    driver.switch_to.default_content()
-    print(driver.find_element_by_xpath("//a[@id='video-title-link']").get_attribute("href"))
+#def YouTube_Find_First_Video_Link():
+#    driver.get("https://www.youtube.com/")
+#    time.sleep(1)
+#    driver.find_element_by_xpath("//yt-button-renderer/a/paper-button/yt-formatted-string").click()
+#    time.sleep(1)
+#    driver.switch_to.frame("iframe")
+#    driver.find_element_by_css_selector("div#introAgreeButton").click()
+#    time.sleep(1)
+#    driver.switch_to.default_content()
+#    print(driver.find_element_by_xpath("//a[@id='video-title-link']").get_attribute("href"))
 
 def YouTube_Deny_Log_In():
     # Probably not working
@@ -283,21 +303,21 @@ def YouTube_Deny_Log_In_And_Validate_General_Condition():
     except:
         print("Error in YouTube_Deny_Log_In_And_Validate_General_Condition()")
   
-def YouTube_Get_First_Video_Link():
-    # You need to be on YouTube home page to call
-    print(driver.find_element_by_xpath("//a[@id='video-title-link']").get_attribute("href"))
+#def YouTube_Get_First_Video_Link():
+#    # You need to be on YouTube home page to call
+#    print(driver.find_element_by_xpath("//a[@id='video-title-link']").get_attribute("href"))
 
-def YouTube_Click_On_First_Video_From_Home_Page():
-    driver.find_element_by_xpath("//a[@id='video-title-link']").click()
+#def YouTube_Click_On_First_Video_From_Home_Page():
+#    driver.find_element_by_xpath("//a[@id='video-title-link']").click()
   
   
-def YouTube_Get_Video_Title_From_Url(url):
-    # You need to have validate the 2 pop up before using it
-    driver.get(url)
-    print(driver.find_element_by_xpath("//h1[@class='title style-scope ytd-video-primary-info-renderer']").text)
+#def YouTube_Get_Video_Title_From_Url(url):
+#    # You need to have validate the 2 pop up before using it
+#    driver.get(url)
+#    print(driver.find_element_by_xpath("//h1[@class='title style-scope ytd-video-primary-info-renderer']").text)
 
-def YouTube_Get_Video_Title_From_Page():
-    print(driver.find_element_by_xpath("//h1[@class='title style-scope ytd-video-primary-info-renderer']").text)
+#def YouTube_Get_Video_Title_From_Page():
+#    print(driver.find_element_by_xpath("//h1[@class='title style-scope ytd-video-primary-info-renderer']").text)
     
 def YouTube_Get_Current_Url():
     try:
@@ -313,55 +333,56 @@ def YouTube_Get_Video_Id_From_Url(url):
     
 
 ## Changer la fonction pour qu'elle prenne en paramètre l'ID de la vidéo
-def YouTube_Get_Comments_From_Video_Id():
-    # Ne fonctionne pas ; peuit-être faut-il être owner de la vidéo pour pouvoir récupérer les commentaires
-    with build('youtube','v3',developerKey='AIzaSyDQpIOHBpjzWLy2iZCWJHbCNAmXi_Fcyt0') as youtube_API:
-        myRequest = youtube_API.comments().list(
-            part='id',
-            id='WUvTyaaNkzM'
-        )
-        myResponse = myRequest.execute()
-        print(type(myResponse))
-        print(myResponse)
-        print(myResponse['items'])
+#def YouTube_Get_Comments_From_Video_Id():
+#    # Ne fonctionne pas ; peuit-être faut-il être owner de la vidéo pour pouvoir récupérer les commentaires
+#    with build('youtube','v3',developerKey='AIzaSyDQpIOHBpjzWLy2iZCWJHbCNAmXi_Fcyt0') as youtube_API:
+#        myRequest = youtube_API.comments().list(
+#            part='id',
+#            id='WUvTyaaNkzM'
+#        )
+#        myResponse = myRequest.execute()
+#        print(type(myResponse))
+#        print(myResponse)
+#        print(myResponse['items'])
 
-def YouTube_Get_Captions_From_Video_Id():
-    # Ajouter les autorisations pour récupérer les captions
-    with build('youtube','v3',developerKey='AIzaSyDQpIOHBpjzWLy2iZCWJHbCNAmXi_Fcyt0') as youtube_API:
-        myRequest = youtube_API.captions().download(
-            id='WUvTyaaNkzM',
-        )
-        myResponse = myRequest.execute()
-        print(type(myResponse))
-        print(myResponse)
+#def YouTube_Get_Captions_From_Video_Id():
+#    # Ajouter les autorisations pour récupérer les captions
+#    with build('youtube','v3',developerKey='AIzaSyDQpIOHBpjzWLy2iZCWJHbCNAmXi_Fcyt0') as youtube_API:
+#        myRequest = youtube_API.captions().download(
+#            id='WUvTyaaNkzM',
+#        )
+#        myResponse = myRequest.execute()
+#        print(type(myResponse))
+#        print(myResponse)
 
 #YouTube_Get_Captions_From_Video_Id()
 
-def a():
-    driver.get("https://www.youtube.com/")
-    time.sleep(1)
-    driver.find_element_by_xpath("//yt-button-renderer/a/paper-button/yt-formatted-string").click()
-    time.sleep(1)
-    driver.switch_to.frame("iframe")
-    driver.find_element_by_css_selector("div#introAgreeButton").click()
-    time.sleep(1)
-    driver.switch_to.default_content()
-    driver.find_element_by_xpath("//a[@id='video-title-link']").click()
+
+#def a():
+#    driver.get("https://www.youtube.com/")
+#    time.sleep(1)
+#    driver.find_element_by_xpath("//yt-button-renderer/a/paper-button/yt-formatted-string").click()
+#    time.sleep(1)
+#    driver.switch_to.frame("iframe")
+#    driver.find_element_by_css_selector("div#introAgreeButton").click()
+#    time.sleep(1)
+#    driver.switch_to.default_content()
+#    driver.find_element_by_xpath("//a[@id='video-title-link']").click()
 
 
 
-def lastChance():
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-    api_service_name = "youtube"
-    api_version = "v3"
-    client_secrets_file = "YOUR_CLIENT_SECRET_FILE.json"
-    # Get credentials and create an API client
-    flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
-    credentials = flow.run_console()
-    youtube = googleapiclient.discovery.build(api_service_name, api_version, credentials=credentials)
-    request = youtube.captions().list(part="snippet",videoId="M7FIvfx5J10")
-    response = request.execute()
-    print(myResponse)
+#def lastChance():
+#    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+#    api_service_name = "youtube"
+#    api_version = "v3"
+#    client_secrets_file = "YOUR_CLIENT_SECRET_FILE.json"
+#    # Get credentials and create an API client
+#    flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
+#    credentials = flow.run_console()
+#    youtube = googleapiclient.discovery.build(api_service_name, api_version, credentials=credentials)
+#    request = youtube.captions().list(part="snippet",videoId="M7FIvfx5J10")
+#    response = request.execute()
+#    print(myResponse)
 
 
 

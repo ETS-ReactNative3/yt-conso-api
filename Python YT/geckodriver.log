@@ -49,3 +49,15 @@ JavaScript error: https://ssl.gstatic.com/support/realtime/operator/161782510606
 
 ###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
 
+1618750862250	geckodriver	INFO	Listening on 127.0.0.1:61397
+1618750865053	mozrunner::runner	INFO	Running command: "C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe" "--marionette" "-foreground" "-no-remote" "-profile" "C:\\Users\\pierr\\AppData\\Local\\Temp\\rust_mozprofile447wFl"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1618750873515	Marionette	INFO	Listening on port 61413
+1618750873626	Marionette	WARN	TLS certificate errors will be ignored for this session
+1618750873645	Marionette	ERROR	[15] No reply from Marionette:Register
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1618750884396	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1618750900045	Marionette	INFO	Stopped listening on port 61413
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+

@@ -1,5 +1,5 @@
 import json
-from test import select_video, watch_the_video_for, dislike_video, like_video, go_to_channel, search_with_url, search_bar, YouTube_Acces_Website, YouTube_FireFox_Accept_Cookies, YouTube_Deny_Log_In_And_Validate_General_Condition, YouTube_Get_Current_Url, YouTube_Get_Video_Id_From_Url
+from myFunctions import YouTube_Google_Log_In, YouTube_Google_Log_Out, YouTube_Acces_Website, YouTube_Accept_Cookies, YouTube_Deny_Log_In, YouTube_Toggle_AutoPlay, YouTube_Get_Video_Id_From_Url, scrollDown, find_video, select_video,watch_the_video_for, dislike_video, like_video, go_to_channel, search_with_url, search_bar
 import time
 
 
