@@ -10,14 +10,20 @@ from crement import Lever
 import time
 import random
 import undetected_chromedriver.v2 as uc
+import json
+import requests
 
 
 myFlag = Flag()
 myLever = Lever()
 
-PATH = r"C:\chromedriver.exe"
+#PATH = r"C:\chromedriver.exe"
 # driver = webdriver.Chrome(PATH)
 driver = uc.Chrome()
+
+with open('bot.json') as jfile:
+    file = json.load(jfile)["0"]
+
 
 
 def YouTube_Google_Log_In(email, password):
@@ -29,20 +35,16 @@ def YouTube_Google_Log_In(email, password):
         driver.find_element_by_css_selector("#identifierNext > div > button").click()
         passwordInput = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#password > div.aCsJod.oJeWuf > div > div.Xb9hP > input")))
         passwordInput.send_keys(password)
-        time.sleep(0.5)
+        time.sleep(2)
         driver.find_element_by_css_selector("#passwordNext > div > button").click()
+        time.sleep(0.5)
+        driver.find_element_by_css_selector("#yDmH0d > c-wiz > div > div > div > div.L5MEH.Bokche.ypEC4c > div.lq3Znf > div.U26fgb.O0WRkf.oG5Srb.HQ8yf.C0oVfc.Zrq4w.WIL89.k97fxb.yu6jOd.M9Bg4d.j7nIZb > span > span").click()
     except:
         print("Error in YouTube_Google_Log_In(email, password)")
 
 def YouTube_Google_Log_Out():
     try:
-        driver.find_element_by_css_selector("#img").click()
-        time.sleep(1)
-        signOut = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#label")))
-        signOut.click()
-        noTx = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/ytd-app/ytd-popup-container/tp-yt-paper-dialog/ytd-channel-warm-welcome-renderer/div/div[2]/div[3]/div[2]/ytd-button-renderer/a/tp-yt-paper-button/yt-formatted-string")))
-        noTx.click()
-        driver.switch_to.default_content()
+        driver.get(driver.current_url + "logout/")
     except:
         print("Error in YouTube_Google_Log_Out()")
 
@@ -54,7 +56,8 @@ def YouTube_Acces_Website():
 
 def YouTube_Accept_Cookies():
     try:
-        driver.find_element_by_xpath("/html/body/div/c-wiz/div/div/div[2]/div[1]/div[4]/form/div[1]/div/button").click()
+        #driver.find_element_by_xpath("/html/body/div/c-wiz/div/div/div[2]/div[1]/div[4]/form/div[1]/div/button").click()
+        driver.find_element_by_css_selector("#yDmH0d > c-wiz > div > div > div > div.NIoIEf > div.G4njw > div.qqtRac > form > div.lssxud > div > button").click()
     except:
         print("Error in YouTube_Accept_Cookies()")
 
@@ -74,9 +77,12 @@ def YouTube_Toggle_AutoPlay():
 
 def YouTube_Get_Video_Id_From_Url(url):
     try:
-        print(url.split("=")[1].split("&")[0])
+        if url == "https://www.youtube.com/":
+            return ''
+        return url.split("=")[1].split("&")[0]
     except:
         print("Error in YouTube_Get_Video_Id_From_Url(url)")
+        return ''
 
 def scrollDown():
     try:
@@ -87,19 +93,17 @@ def scrollDown():
 def find_video():
     try:
         l = []
-        d = dict()
-        i = 0
         for x in driver.find_elements_by_css_selector("#thumbnail"):
-            print(x.get_attribute("href"))
-            l.append(x.get_attribute("href"))
-            i += 1
-        print(i)
-        #return d[driver.current_url] = l
+            url = x.get_attribute("href")
+            if url == None:
+                continue
+            idVideo = YouTube_Get_Video_Id_From_Url(url)
+            l.append(idVideo)
+        return l
     except:
         print("Error in find_video")
 
 def select_video(n=1):
-    print(n)
     try:
         if driver.current_url == "https://www.youtube.com/":
             # From homepage
@@ -111,8 +115,8 @@ def select_video(n=1):
             print("video")
             driver.find_elements_by_xpath('//div[@id="primary-inner"]/div[@id="related"]/ytd-watch-next-secondary-results-renderer/div[@id="items"]/ytd-compact-video-renderer')[n].click()
         elif "results?search_query=" in driver.current_url:
-            # From a research
-            print("research")
+            # From a search
+            print("search")
             driver.find_elements_by_xpath('//div[@id="content"]/ytd-page-manager[@id="page-manager"]/ytd-search/div[@id="container"]/ytd-two-column-search-results-renderer/div[@id="primary"]/ytd-section-list-renderer/div[@id="contents"]/ytd-item-section-renderer/div[@id="contents"]/ytd-video-renderer')[n].click()
         else:
             print("channel")
@@ -124,12 +128,23 @@ def select_video(n=1):
         if myLever.get() == 0:
             print(str(myLever.get()))
             myLever.incr()
-            # Scroll down
+            scrollDown()
             select_video(n+1)
         else:
             print("Error in select_video()")
     finally:
         myLever.setLever(0)
+        
+def find_video_length_in_seconds():
+    try :
+        strTime = driver.find_element_by_css_selector("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-left-controls > div.ytp-time-display.notranslate > span.ytp-time-duration").text
+        listTime = strTime.split(":")[::-1]
+        res = 0
+        for i in range(len(listTime)):
+            res += int(listTime[i]) * (60**i)
+        return res
+    except :
+        print("Error in find_video_length_in_seconds()")
 
 def watch_the_video_for(n=0):
     try:
@@ -151,7 +166,8 @@ def like_video():
 
 def go_to_channel():
     try:
-        driver.find_element_by_xpath("//ytd-video-owner-renderer/a/yt-img-shadow/img").click()
+        #driver.find_element_by_xpath("//ytd-video-owner-renderer/a/yt-img-shadow/img").click()
+        driver.find_element_by_css_selector("#top-row > ytd-video-owner-renderer > a").click()
     except:
         print("Error in go_to_channel()")
 
@@ -163,7 +179,78 @@ def search_with_url(url):
 
 def search_bar(text):
     try:
+        #HERE
+        #Je n'arrive pas a effacer le contenu qui est dans la barre de recherche. Je n'arrive pas a vérifier si la barre de recherche contient du texte
+        #driver.find_element_by_id("search").clear()
+        #Another way :
+        #driver.get("https://www.youtube.com/results?search_query="+text)
         driver.find_element_by_id("search").send_keys(text)
         driver.find_element_by_id("search-icon-legacy").click()
     except:
         print("Error in search_bar()")
+
+
+
+
+
+
+
+
+
+YouTube_Acces_Website()
+time.sleep(2)
+YouTube_Accept_Cookies()
+time.sleep(2)
+YouTube_Deny_Log_In()
+
+thisSession = str(int(time.time()))
+toggle_auto_play_bool = False
+was_done = False
+currentAction = 0
+
+requests.post("http://test.netops.fr/api/session/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
+print(thisSession)
+
+for x in file:
+    if x["action"] == 'settings':
+        currentAction = 1
+        if "autoPlay" in x["options"]:
+            toggle_auto_play_bool = True
+    elif x["action"] == 'search':
+        currentAction = 2
+        search_bar(x["toSearch"])
+    elif x["action"] == 'watch':
+        currentAction = 3
+        if "url" in x:
+            search_with_url(x["url"])
+        elif "index" in x :
+            select_video(x["index"])
+        if "watchContext" in x:
+            # LA : le paramètre doit être un nombre qui indique le nombre de seconde
+            if x["watchContext"]["stopsAt"] == "never":
+                watch_the_video_for(find_video_length_in_seconds())
+            else :
+                watch_the_video_for(int(x["watchContext"]["stopsAt"]))
+            if "social" in x["watchContext"]:
+                if x["watchContext"]["social"] == 'like':
+                    currentAction = 4
+                    like_video()
+                else :
+                    currentAction = 5
+                    dislike_video()
+        if toggle_auto_play_bool:
+            YouTube_Toggle_AutoPlay()
+        # Send video id + all videos id
+        currentVideo = driver.current_url
+        listVideos = find_video()
+        requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos})
+    elif x["action"] == 'goToChannel':
+        currentAction = 6
+        go_to_channel()
+    print(YouTube_Get_Video_Id_From_Url(driver.current_url))
+    time.sleep(1)
+
+
+#driver.find_element_by_xpath('//div[3]/div/ytd-menu-renderer/yt-icon-button/button/yt-icon').click()
+#Verifier l'integrité des données avec un screenshot de la page ; faire un plan de test
+#A moi de faire l'index

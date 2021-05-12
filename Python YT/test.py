@@ -82,8 +82,8 @@ for x in l.keys():
 '''
 
 import requests as rq
-
-r = rq.post("http://test.netops.fr/api/sessions", headers={"accept":"application/ld+json", "Content-Type": "application/ld+json"}, data={"id":"110100"})
+#r = rq.post("http://test.netops.fr/api/sessions", headers={"accept":"application/ld+json", "Content-Type": "application/ld+json"}, data={"id":"110100"})
+#r = requests.post("http://test.netops.fr/api/sessions", headers={"Content-Type": "application/ld+json"}, json={"id":"10155"})
 
 
 
