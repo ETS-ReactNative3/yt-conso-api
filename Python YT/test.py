@@ -10,6 +10,7 @@ import random
 import os
 from googleapiclient.discovery import build
 import googleapiclient.errors
+import undetected_chromedriver.v2 as uc
 
 myAPIYouTubeKey = 'AIzaSyBEkQeSVr0S0kh0OAj5PR4EexFbb-e6fSk'
 myClientId = '708274977995-a6olhaq2oqf661uulukfl1tgl80m2pc3.apps.googleusercontent.com'
@@ -37,7 +38,7 @@ caps['goog:loggingPrefs'] = { 'browser':'ALL' }
 
 
 #Load the driver
-driver = webdriver.Chrome(PATH,options=opt,desired_capabilities=caps)
+#driver = webdriver.Chrome(PATH,options=opt,desired_capabilities=caps)
 
 
 
@@ -48,7 +49,7 @@ driver = webdriver.Chrome(PATH,options=opt,desired_capabilities=caps)
 PATH = "C:\chromedriver.exe"
 driver = webdriver.Chrome(PATH)
 '''
-
+driver = uc.Chrome()
 
 
 
@@ -86,9 +87,18 @@ import requests as rq
 #r = requests.post("http://test.netops.fr/api/sessions", headers={"Content-Type": "application/ld+json"}, json={"id":"10155"})
 
 
+style-scope ytd-button-renderer
 
-
-
+def find_caption():
+    try:
+        driver.find_element_by_xpath("//div[3]/div/ytd-menu-renderer/yt-icon-button/button/yt-icon").click()
+        #driver.find_elements(By.CSS_SELECTOR, ".ytd-menu-popup-renderer > ytd-menu-service-item-renderer")[0].click()
+        driver.find_elements_by_css_selector(".ytd-menu-popup-renderer > ytd-menu-service-item-renderer")[0].click()
+        caption= "".join([e.get_attribute('innerHTML') for e in driver.find_elements_by_css_selector("div.cue-group > div > div")])
+        return caption
+    except:
+        print("Error in find_caption()")
+        return ''
 
 
 

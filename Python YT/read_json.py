@@ -20,8 +20,6 @@ import undetected_chromedriver.v2 as uc
 # Faire que les x["watchContext"]["stopsAt"] soient des nombres ou "never"
 # Le paramètre doit être un nombre qui indique le nombre de seconde
 # Comment gérer currentAction (dans la configuration actuelle, le comportement executé n'est pas celui attendu
-# Erreur dans search_bar
-# Erreur interaction go_to_channel et find_video et search_video
 # Il faut se login ;; ça sera dans les settings
 # ajouter l'adblock
 
