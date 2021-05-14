@@ -9,4 +9,3 @@ class Flag:
     def plantFlag(self):
         print(self.string + " " + str(self.number))
         self.number += 1
-        
