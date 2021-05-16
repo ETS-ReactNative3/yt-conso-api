@@ -57,8 +57,7 @@ caps['goog:loggingPrefs'] = { 'browser':'ALL' }
 #driver = webdriver.Chrome(PATH, options=opt, desired_capabilities=caps)
 driver = uc.Chrome(PATH, options=opt, desired_capabilities=caps)
 
-with open('bot.json') as jfile:
-    file = json.load(jfile)["0"]
+
 
 
 
@@ -237,17 +236,29 @@ def search_bar(text):
     except:
         print("Error in search_bar()")
 
+
 def robot(file):
+    thisSession = str(int(time.time()))
+    toggle_auto_play_bool = False
+    actionNumber = Lever()
+    currentAction = -1
+    oldAction = -1
     for x in file:
         if x["action"] == 'settings':
             #Envoyer à Sylvain les settings modifés
             currentAction = 1
+#            Envoye de la requete
             if "autoPlay" in x["options"]:
                 toggle_auto_play_bool = True
+            oldAction = currentAction
+            actionNumber.incr()
         elif x["action"] == 'search':
             #Envoyer à Sylvain les mots clefs
             currentAction = 2
             search_bar(x["toSearch"])
+#            Envoye de la requete
+            oldAction = currentAction
+            actionNumber.incr()
         elif x["action"] == 'watch':
             #Envoyer à Sylvain l'id de la vidéo et les id de toutes les vidéos
             currentAction = 3
@@ -255,30 +266,38 @@ def robot(file):
                 search_with_url(x["url"])
             elif "index" in x :
                 select_video(x["index"])
+            currentVideo = driver.current_url
+            listVideos = find_video()
+            #requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos})
+            oldAction = currentAction
+            actionNumber.incr()
             if "watchContext" in x:
                 if x["watchContext"]["stopsAt"] == "never":
                     watch_the_video_for(find_video_length_in_seconds())
                 else :
                     watch_the_video_for(int(x["watchContext"]["stopsAt"]))
                 if "social" in x["watchContext"]:
+                    #Emvoye à Sylvain les likes ou dislikes
                     if x["watchContext"]["social"] == 'like':
-#                        Envoyer à Sylvain le like de cette vidéo
+                        currentAction = 4
                         like_video()
+#                        Envoye de la requete
+                        oldAction = currentAction
+                        actionNumber.incr()
                     else :
-#                        Envoyer à Sylvain le dislike de cette vidéo
                         currentAction = 5
                         dislike_video()
+#                        Envoye de la requete
+                        oldAction = currentAction
+                        actionNumber.incr()
             if toggle_auto_play_bool:
                 YouTube_Toggle_AutoPlay()
                 toggle_auto_play_bool = False
-            # Send video id + all videos id
-            currentVideo = driver.current_url
-            listVideos = find_video()
-    #        requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos})
         elif x["action"] == 'goToChannel':
             currentAction = 6
             go_to_channel()
-        print(YouTube_Get_Video_Id_From_Url(driver.current_url))
+            oldAction = currentAction
+            actionNumber.incr()
         time.sleep(1)            
         
 
@@ -396,13 +415,16 @@ YouTube_Accept_Cookies()
 time.sleep(2)
 YouTube_Deny_Log_In()
 
-thisSession = str(int(time.time()))
-toggle_auto_play_bool = False
-was_done = False
-currentAction = 0
+file = ''
+with open('bot.json') as jfile:
+    file = json.load(jfile)["0"]
+    
+robot(file)
+
+
 
 #requests.post("http://test.netops.fr/api/session/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
-print(thisSession)
+#print(thisSession)
 
 #for x in file:
 #    if x["action"] == 'settings':
