@@ -1,3 +1,45 @@
+#Ce script contient l'ensemble des fonctions qui permet de naviguer automatiquement et de manière controlée sur le web
+#Particulièrement, il est utilisé pour naviguer et scrapper YouTube
+#Voici la liste des fonctions :
+#    YouTube_Google_Log_In(email, password)
+#    YouTube_Google_Log_Out()
+#    YouTube_Acces_Website()
+#    YouTube_Accept_Cookies()
+#    YouTube_Deny_Log_In()
+#    YouTube_Toggle_AutoPlay()
+#    YouTube_Get_Video_Id_From_Url(url)
+#    YouTube_Music_No_Thanks()
+#    home_page()
+#    scrollDown()
+#    find_caption()
+#    find_video()
+#    select_video(n=0)
+#    find_video_length_in_seconds()
+#    watch_the_video_for(n=0)
+#    dislike_video()
+#    like_video()
+#    go_to_channel()
+#    search_with_url(url)
+#    search_bar(text)
+#    robot(file)
+#    test_select_video(n=0)
+#    test_find_video()
+#    test_go_to_channel()
+#    test_search_bar(text)
+#    test_like_video()
+#    test_dislike_video()
+#    test_find_video_length_in_seconds()
+#    test_scroll_down()
+#    test_YouTube_Toggle_AutoPlay()
+#    test_YouTube_Google_Log_Out()
+#    test_YouTube_Google_Log_In(email, password)
+#    test_YouTube_Acces_Website()
+#    
+#Voici la liste du code qui n'est pas dans des fonctions :
+#    Ligne 70 à 107
+#    Ligne 544 à 556
+
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -21,9 +63,16 @@ import undetected_chromedriver.v2 as uc
 import json
 import requests
 import urllib.parse
+from s4gpy.s4gpy import S4GAPI
 
 
 
+#Cette première partie, morcellée, pas encore dans un fonction, permet d'instancier le webdriver, qui est utilisé pour naviguer de manière automatique et controlé par un programme sur le web
+#La deuxième partie est ligne 502
+#myFlag(), myLever() sont obsolètes
+#Important :
+#    PATH correspond au cheminoù est stocké le webdriver
+#driver est la variable qui contient le webdriver, et qui va donc être manipulé pour naviquer sur le web
 myFlag = Flag()
 myLever = Lever()
 
@@ -48,8 +97,8 @@ opt.add_argument("--ignore-ssl-errors=yes")
 opt.add_argument("--window-size=1280,720")
 opt.add_argument("--ignore-certificate-errors")
 opt.add_argument("--disable-dev-shm-usage")
-#opt.add_extension("./extension_1_35_2_0.crx")
-opt.add_extension("extension_1_35_2_0.crx")
+opt.add_extension("./extension_1_35_2_0.crx")
+#opt.add_extension("extension_1_35_2_0.crx")
 caps['goog:loggingPrefs'] = { 'browser':'ALL' }
 
 
@@ -61,6 +110,14 @@ driver = uc.Chrome(PATH, options=opt, desired_capabilities=caps)
 
 
 
+
+
+
+#Paramètres :
+#    String  email       l'email du compte avec lequel on veut se loger
+#    String  password    le mot de passe associé à l'email en paramètres
+#Cette fonction permet de s'identifier avec un email et un mot de passe donnée à partir de la page d'acceuil de YouTube
+#(Elle devrait permettre de se loger depuis n'importe quel endroit du site, pas encore testé)
 def YouTube_Google_Log_In(email, password):
     try:
         driver.find_element_by_css_selector("#buttons > ytd-button-renderer > a").click()
@@ -77,24 +134,33 @@ def YouTube_Google_Log_In(email, password):
     except:
         print("Error in YouTube_Google_Log_In(email, password)")
 
+#Cette fonction permet de se déconnecter depuis la page d'accueil de YouTube
+#(devrait fonctionner depuis n'importe quel endroit du site, pas encore testé)
 def YouTube_Google_Log_Out():
     try:
         driver.get(driver.current_url + "logout/")
     except:
         print("Error in YouTube_Google_Log_Out()")
 
+
+#Cette fonction permet d'accéder à la page d'accueil de YouTube
 def YouTube_Acces_Website():
     try:
         driver.get("https://www.youtube.com/")
     except:
         print("Error in YouTube_Acces_Website()")
 
+#Cette fonction permet d'accepter les cookies
+#En effet, sur Google, lorsqu'un nouvel utilisateur souhaite bénéficer des services de Google, il est obligé d'accepter les cookies
+#Comme chaque lancement du script agit comme un nouvel utilisateur, il est nécessaire de les accepter à chaque fois
 def YouTube_Accept_Cookies():
     try:
         driver.find_element_by_css_selector("#yDmH0d > c-wiz > div > div > div > div.NIoIEf > div.G4njw > div.qqtRac > form > div.lssxud > div > button").click()
     except:
         print("Error in YouTube_Accept_Cookies()")
 
+#Cette fonction permet de ne pas s'identifier lorsqu'une fenêtre pop up s'ouvre dans le navigateur
+#Elle apparait la première fois que l'on souhaite utiliser un service Google
 def YouTube_Deny_Log_In():
     try:
         driver.find_element_by_xpath("/html/body/ytd-app/ytd-popup-container/tp-yt-paper-dialog/yt-upsell-dialog-renderer/div/div[3]/div[1]/yt-button-renderer/a/tp-yt-paper-button/yt-formatted-string").click()
@@ -103,12 +169,24 @@ def YouTube_Deny_Log_In():
     except:
         print("Error in YouTube_Deny_Log_In()")
 
+#Cette fonction permet de cliquer sur le bouton auto-play
+#Auto-play est un bouton qui agit comme un toggle ; étant activé par défaut, un nombre impair de cliques empêche la lecture automatique de vidéos.
+#Un nombre pair active la lecture automatique de vidéos
 def YouTube_Toggle_AutoPlay():
     try:
         driver.find_element_by_css_selector("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls > button:nth-child(1) > div > div").click()
     except:
         print("Error in YouTube_Toggle_AutoPlay()")
 
+
+#Paramètre :
+#    String  url l'url d'une vidéo YouTube
+#Return :
+#    String      l'id de l'url
+#Error :
+#    String  ''  String vide
+#Permet de récupérer l'id d'un url de vidéo YouTube passé en paramètre.
+#Retourne un String vide s'il rencontre une erreur
 def YouTube_Get_Video_Id_From_Url(url):
     try:
         if url == "https://www.youtube.com/":
@@ -118,24 +196,33 @@ def YouTube_Get_Video_Id_From_Url(url):
         print("Error in YouTube_Get_Video_Id_From_Url(url)")
         return ''
 
+#Cette fonction permet de décliner l'offre de YouTube Music
 def YouTube_Music_No_Thanks():
     try:
         driver.find_element_by_css_selector("ytd-button-renderer#dismiss-button > a > tp-yt-paper-button > yt-formatted-string").click()
     except:
         print("Error in YouTube_Music_No_Thanks()")
-        
+
+#Cette fonction permet de revenir à la page d'accueil de YouTube
+#Fonctionne depuis n'importe où sur le site
 def home_page():
     try:
         driver.find_element_by_css_selector("#logo > a > div > #logo-icon").click()
     except:
         print("Error in home_page()")
 
+#Cette fonction permet de scroller vers le bas
+#L'objectif est de charger plus de vidéos
 def scrollDown():
     try:
         driver.execute_script("window.scrollBy(0,1500);")
     except:
         print("Error in scrollDown()")
 
+#FONCTION A DISPARAITRE
+#Return :
+#    String  caption Un String contenant toutes les captions de la vidéo en cours
+#Cette fonction permet de récupérer tous les sous-titres d'une vidéo depuis la page YouTube de cette vidéo
 def find_caption():
     try:
         driver.find_element_by_xpath("//div[3]/div/ytd-menu-renderer/yt-icon-button/button/yt-icon").click()
@@ -146,6 +233,9 @@ def find_caption():
         print("Error in find_caption()")
         return ''
 
+#Return :
+#    List    l   Retourne une liste contenant tous les id des vidéos chargées sur la page actuelle
+#Cette fonction retourne une liste contenant tous les id des vidéos chargées sur la page actuelle
 def find_video():
     try:
         l = []
@@ -160,6 +250,10 @@ def find_video():
     except:
         print("Error in find_video")
 
+#Paramètre :
+#    int n   Numéro de la vidéo à visionner
+#Permet de visionner la n-ième vidéo sur la page. Fonctionne sur la page d'accueil, après une recherche dans l'outil de recherche YouTube, depuis une vidéo ou depuis l'onglet vidéo d'une chaine YouTube.
+#Si aucun paramètre n'est donné, c'est la toute première vidéo qui est visionnée
 def select_video(n=0):
     try:
         currUrl = driver.current_url
@@ -182,7 +276,10 @@ def select_video(n=0):
     except:
         print("Error in select_video()")
 
-        
+
+#Return :
+#    int res Durée de la vidéo en secondes
+#Trouve la durée de la vidéo sur la page web, convertit le temps trouvé en secondes et le retourne
 def find_video_length_in_seconds():
     try :
         strTime = driver.find_element_by_css_selector("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-left-controls > div.ytp-time-display.notranslate > span.ytp-time-duration").text
@@ -194,24 +291,36 @@ def find_video_length_in_seconds():
     except :
         print("Error in find_video_length_in_seconds()")
 
+
+#Paramètre :
+#    int n   Nombres de secondes de visionnage de la vidéo
+#Prends en paramètre un nombre de secondes et hatle le programme pendant cette durée.
+#Permet de simuler le visionnage d'une vidéo.
+#Si aucun paramètre n'est donné, alors la fonction n'halte pas le programme
 def watch_the_video_for(n=0):
     try:
         time.sleep(n)
     except:
         print("Error in watch_the_video_for()")
 
+#Cette fonction permet de dislike une vidéo.
+#Cette fonction n'a un effet que si le robot s'est "log in" avec un compte Google
 def dislike_video():
     try:
         driver.find_element_by_css_selector(".ytd-video-primary-info-renderer > #top-level-buttons > .style-scope:nth-child(2) #button > #button > .style-scope").click()
     except:
         print("Error in dislike_video()")
-    
+
+#Cette fonction permet de like une vidéo.
+#Cette fonction n'a un effet que si le robot s'est "log in" avec un compte Google
 def like_video():
     try:
         driver.find_element_by_css_selector(".ytd-video-primary-info-renderer > #top-level-buttons > .style-scope:nth-child(1) #button > #button > .style-scope").click()
     except:
         print("Error in like_video()")
 
+#Cette fonction permet depuis la page de visonnage d'une vidéo d'accéder à la chaine qui a uploader cette vidéo
+#Cette fonction, une fois sur la chaine, va automatiquement sur l'onglet "Vidéos"
 def go_to_channel():
     try:
         driver.find_element_by_css_selector("#top-row > ytd-video-owner-renderer > a").click()
@@ -221,12 +330,19 @@ def go_to_channel():
     except:
         print("Error in go_to_channel()")
 
+#Paramètres :
+#    String  url L'url d'une vidéo YouTube
+#Cette fonction de charger la page d'une vidéo YouTube depuis son url
 def search_with_url(url):
     try:
         driver.get(url)
     except:
         print("Error in search_with_url()")
 
+#Paramètre :
+#    String  text    Texte correspondant à la recherhce YouTube
+#Permet d'entrer des mots-clefs, du texte dans l'outil de recherche YouTube depuis n'importe quel endroit de YouTube.
+#YouTube gardant en mémoire la recherche précédante, cette fonction efface tous ce qui à été écris et entre le String passé en paramètre et exécute la recherche
 def search_bar(text):
     try:
         # Query
@@ -237,12 +353,22 @@ def search_bar(text):
         print("Error in search_bar()")
 
 
+#Paramètre :
+#    List    x   Une liste contenant des dictionnaires, correspondant aux actions que doit exécute le script
+#Cette fonction permet de lire une liste et d'exécuter les instructions stockées dans des dictionnaires.
+#Cette fonction correspond au "robot", qui va utiliser la quasi totalité des autres fonctions pour fonctionner.
+#Elle envoye à des points clefs des requêtes à la DataBase
+#Variables :
+#    String          thisSession     Converti le nombre de secondes depuis l'Epoch en String. Permet d'assurer un ordre entre les différentes sessions
+#    Boolean         toggle_auto_play_bool   Permet d'assurer le bon fonctionnement de YouTube_Toggle_AutoPlay()
+#    Object          actionNumber        Permet d'avoir un objet qui assure l'incrémentation de l'index de chaque action, pour garder dans la BdD l'odre de déroulement des actions faites par le robot
+#    int         currentAction       Permet de savoir quelle est l'action actuellement réalisée par le robot. Sera envoyée dans la requête à la BdD
 def robot(file):
     thisSession = str(int(time.time()))
     toggle_auto_play_bool = False
     actionNumber = Lever()
     currentAction = -1
-    oldAction = -1
+#    oldAction = -1
     for x in file:
         if x["action"] == 'settings':
             #Envoyer à Sylvain les settings modifés
@@ -305,7 +431,11 @@ def robot(file):
 
 
 
-
+#Les fonctions qui suivent sont censé tester toutes les fonctions du robot (celles qui peuvent être automatiquement testés).
+#L'idée sous-jacente est de récupérer le code html actuel de la page, un "screenshot", et de vérifier si la fonction réalise effectivement ce pourquoi elle à été appelé avec des "select" intelligent à l'aide de BeautifulSoup.
+#Nommage : "test_" + NomDeLaFonctionTesté
+#Return :
+#    Boolean     Retourne si le test à été validé ou non
 def test_select_video(n=0):
 #    S'assurer que l'url ouverte par le robot correspond bien à la n-ième url dans le code de la page enregistré
     soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
@@ -409,6 +539,10 @@ def test_YouTube_Acces_Website():
     time.sleep(2)
     return driver == 'https://www.youtube.com/'
 
+
+
+#Cette deuxième partie pas encore dans une fonction s'exécute dès que le programme est exécuté.
+#Il permet de demander au webdriver d'arriver à la page d'accueil de YouTube, d'ouvrir la liste d'instruction donnée par le fichier "bot.json", et d'exécuter ces instructions
 YouTube_Acces_Website()
 time.sleep(2)
 YouTube_Accept_Cookies()
@@ -420,6 +554,17 @@ with open('bot.json') as jfile:
     file = json.load(jfile)["0"]
     
 robot(file)
+
+
+
+
+
+#---------------------------------------------
+#La suite est juste un dépo personnel pour me souvenir ce que je dois faire, à changer, à améliorer.
+#Elle va bien sur disparaître prochainement
+
+
+
 
 
 
@@ -507,3 +652,8 @@ fin = 1
 #Corriger les bugs
 #Faire le plan de test
 #A moi de faire l'index
+#Faire les requtes et partager la syntaxe avec Sylvain
+#Mettre une fonction go_to_home
+#Recuperer les comptes
+#Faire une documentation
+#Creer X comptes et envoyer le tout a Herbaut
