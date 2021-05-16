@@ -14,11 +14,14 @@ from selenium.webdriver.chrome.options import Options
 
 from flags import Flag
 from crement import Lever
+from bs4 import BeautifulSoup
 import time
 import random
 import undetected_chromedriver.v2 as uc
 import json
 import requests
+import urllib.parse
+
 
 
 myFlag = Flag()
@@ -45,7 +48,8 @@ opt.add_argument("--ignore-ssl-errors=yes")
 opt.add_argument("--window-size=1280,720")
 opt.add_argument("--ignore-certificate-errors")
 opt.add_argument("--disable-dev-shm-usage")
-opt.add_extension("./extension_1_35_2_0.crx")
+#opt.add_extension("./extension_1_35_2_0.crx")
+opt.add_extension("extension_1_35_2_0.crx")
 caps['goog:loggingPrefs'] = { 'browser':'ALL' }
 
 
@@ -283,6 +287,108 @@ def robot(file):
 
 
 
+def test_select_video(n=0):
+#    S'assurer que l'url ouverte par le robot correspond bien à la n-ième url dans le code de la page enregistré
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    currUrl = driver.current_url
+    strUrl = ''
+    if currUrl == "https://www.youtube.com/":
+        strUrl = str(soup.select('#contents > ytd-rich-item-renderer > div > ytd-rich-grid-media > div#dismissible > ytd-thumbnail > a')[n])
+    elif "watch?v=" in currUrl:
+        strUrl = str(soup.select('#items > ytd-compact-video-renderer > div > ytd-thumbnail > a')[n])
+    elif "results?search_query=" in currUrl:
+        strUrl = str(soup.select('#contents > ytd-video-renderer > div#dismissible > ytd-thumbnail > a')[n])
+    else:
+        strUrl = str(soup.select("#items > ytd-grid-video-renderer > #dismissible > ytd-thumbnail > a")[n])
+    strUrl = strUrl[:strUrl.index(">")]
+    url = strUrl[strUrl.index('href="')+6:]
+    url = url[:url.index('"')]
+    select_video()
+    return 'https://www.youtube.com' + url == driver.current_url
+
+def test_find_video():
+#    S'assurer que toutes les vidéos de la page ont bien été chargés dans la liste
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    mySet = set()
+    for x in soup.select("#dismissible > ytd-thumbnail > a#thumbnail"):
+        x = str(x)
+        url = x[x.index('href="')+6:]
+        url = url[:x.index('"')]
+        mySet.add(url)
+    return mySet == set(find_video)
+
+def test_go_to_channel():
+#    S'assurer que la chaine ouverte par le robot correspond bien à la chaine de la page d'avant
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    strName = str(soup.select("#text > a")[0])
+    strName = strName[strName.index('>')+1:strName.index('<',2)]
+    go_to_channel()
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    strName2 = str(soup.select("ytd-channel-name > div > div > yt-formatted-string > a")[0])
+    strName2 = strName2[strName2.index('>')+1:strName2.index('<',2)]
+    return strName == strName2
+
+def test_search_bar(text):
+#    S'assurer que l'url coresponde bien aux mots tapés, avec correction URL Special encoding : https://secure.n-able.com/webhelp/NC_9-1-0_SO_en/Content/SA_docs/API_Level_Integration/API_Integration_URLEncoding.html
+    inUrl = urllib.parse.quote_plus(query)
+    search_bar(text)
+    time.sleep(1)
+    return 'https://www.youtube.com/results?search_query=' + inUrl == driver.current_url
+
+def test_like_video():
+#    Vérifier que le driver.find_element_by_css_selector(".ytd-video-primary-info-renderer > #top-level-buttons > .style-scope:nth-child(1) #button > #button").get_attribute("aria-pressed") == True
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    return 'aria-pressed="false"' in str(soup.select(".ytd-video-primary-info-renderer > #top-level-buttons > .style-scope:nth-child(1) #button > #button"))
+
+def test_dislike_video():
+#    Vérifier que le driver.find_element_by_css_selector(".ytd-video-primary-info-renderer > #top-level-buttons > .style-scope:nth-child(2) #button > #button").get_attribute("aria-pressed") == False
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    return 'aria-pressed="false"' in str(soup.select(".ytd-video-primary-info-renderer > #top-level-buttons > .style-scope:nth-child(2) #button > #button"))
+
+def test_find_video_length_in_seconds():
+#    Vérifier que dans le code de la page enregistré, la longueure convertie correspond bien
+
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    strTime = soup.select("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-left-controls > div.ytp-time-display.notranslate > span.ytp-time-duration")
+    strTime = strTime[strTime.index('>')+1:strTime.index('<',2)]
+    listTime = strTime.split(":")[::-1]
+    res = 0
+    for i in range(len(listTime)):
+        res += int(listTime[i]) * (60**i)
+    return res == find_video_length_in_seconds()
+
+def test_scroll_down():
+    strSoup = str(BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser'))
+    scrollDown()
+    strSoup2 = str(BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser'))
+    return strSoup2 > strSoup
+
+def test_YouTube_Toggle_AutoPlay():
+#    Vérifier que driver.find_element_by_css_selector("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls > button:nth-child(1) > div > div").get_attribute("href") est différent entre le code de la page enregistré et le code actuel
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    resStr = soup.select('#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls > button:nth-child(1) > div > div')
+    YouTube_Toggle_AutoPlay()
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    resStr2 = soup.select('#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls > button:nth-child(1) > div > div')
+    return resStr != resStr2
+
+def test_YouTube_Google_Log_Out():
+#    Vérfier que len(driver.find_element_by_css_selector("yt-formatted-string#text.style-scope.ytd-button-renderer.style-suggestive.size-small")) == 1
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    return len(soup.select("yt-formatted-string#text.style-scope.ytd-button-renderer.style-suggestive.size-small")) == 1
+
+def test_YouTube_Google_Log_In(email, password):
+#    Vérifier que len(driver.find_element_by_css_selector("yt-formatted-string#text.style-scope.ytd-button-renderer.style-suggestive.size-small")) == 0
+    soup = BeautifulSoup(driver.find_element_by_css_selector("html").get_attribute("outerHTML"), 'html.parser')
+    return len(soup.select("yt-formatted-string#text.style-scope.ytd-button-renderer.style-suggestive.size-small")) == 0
+
+def test_YouTube_Acces_Website():
+#    Vérifier que driver.current_url = 'https://www.youtube.com/'
+    YouTube_Accept_Cookies()
+    time.sleep(1)
+    YouTube_Deny_Log_In()
+    time.sleep(2)
+    return driver == 'https://www.youtube.com/'
 
 YouTube_Acces_Website()
 time.sleep(2)
@@ -339,8 +445,9 @@ print(thisSession)
 
 fin = 1
 #Envoyer les données d'actions à chaque pas ; discuter avec Sylvain
-#Ajouter adblock
+#Ajouter adblock - Je n'y arrive pas
 #Verifier l'integrité des données avec un screenshot de la page ; faire un plan de test :
+#driver.find_element_by_css_selector("html").get_attribute("outerHTML")
 #    Enregister le code affiché de la page avant d'exécuter une fonction
 #    Pour un select_video() :
 #        S'assurer que l'url ouverte par le robot correspond bien à la n-ième url dans le code de la page enregistré
