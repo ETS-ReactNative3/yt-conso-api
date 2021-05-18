@@ -54,27 +54,23 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
 
-from flags import Flag
 from crement import Lever
 from bs4 import BeautifulSoup
+from s4gpy.s4gpy import S4GAPI
 import time
 import random
 import undetected_chromedriver.v2 as uc
 import json
 import requests
 import urllib.parse
-from s4gpy.s4gpy import S4GAPI
 
 
 
 #Cette première partie, morcellée, pas encore dans un fonction, permet d'instancier le webdriver, qui est utilisé pour naviguer de manière automatique et controlé par un programme sur le web
 #La deuxième partie est ligne 502
-#myFlag(), myLever() sont obsolètes
 #Important :
 #    PATH correspond au cheminoù est stocké le webdriver
-#driver est la variable qui contient le webdriver, et qui va donc être manipulé pour naviquer sur le web
-myFlag = Flag()
-myLever = Lever()
+#driver est la variable qui contient le webdriver, et qui va donc être manipulé pour naviguer sur le web
 
 PATH = r"C:\chromedriver.exe"
 # driver = webdriver.Chrome(PATH)
@@ -90,7 +86,7 @@ PATH = r"C:\chromedriver.exe"
 opt = webdriver.ChromeOptions()
 caps = webdriver.DesiredCapabilities.CHROME.copy()
 
-opt.add_argument("--no-sandbox")
+#opt.add_argument("--no-sandbox")
 opt.add_argument("--disable-gpu")
 opt.add_argument("--allow-running-insecure-content")
 opt.add_argument("--ignore-ssl-errors=yes")
@@ -117,28 +113,39 @@ driver = uc.Chrome(PATH, options=opt, desired_capabilities=caps)
 #    String  email       l'email du compte avec lequel on veut se loger
 #    String  password    le mot de passe associé à l'email en paramètres
 #Cette fonction permet de s'identifier avec un email et un mot de passe donnée à partir de la page d'acceuil de YouTube
-#(Elle devrait permettre de se loger depuis n'importe quel endroit du site, pas encore testé)
-def YouTube_Google_Log_In(email, password):
+#Fonctionne depuis n'importe quel endroit du site
+def YouTube_Google_Log_In():
     try:
-        driver.find_element_by_css_selector("#buttons > ytd-button-renderer > a").click()
+        laccounts = get_Google_Accounts()
+        selectTupple = laccounts[random.randrange(len(laccounts))]
+        email = selectTupple[0]
+        password = selectTupple[1]
+        driver.find_element_by_css_selector("#end > #buttons > ytd-button-renderer > a").click()
         emailInput = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#identifierId")))
         emailInput.send_keys(email)
         time.sleep(0.5)
         driver.find_element_by_css_selector("#identifierNext > div > button").click()
         passwordInput = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#password > div.aCsJod.oJeWuf > div > div.Xb9hP > input")))
+        time.sleep(2)
         passwordInput.send_keys(password)
         time.sleep(2)
         driver.find_element_by_css_selector("#passwordNext > div > button").click()
         time.sleep(0.5)
-        driver.find_element_by_css_selector("#yDmH0d > c-wiz > div > div > div > div.L5MEH.Bokche.ypEC4c > div.lq3Znf > div.U26fgb.O0WRkf.oG5Srb.HQ8yf.C0oVfc.Zrq4w.WIL89.k97fxb.yu6jOd.M9Bg4d.j7nIZb > span > span").click()
+        #driver.find_element_by_css_selector("#yDmH0d > c-wiz > div > div > div > div.L5MEH.Bokche.ypEC4c > div.lq3Znf > div.U26fgb.O0WRkf.oG5Srb.HQ8yf.C0oVfc.Zrq4w.WIL89.k97fxb.yu6jOd.M9Bg4d.j7nIZb > span > span").click()
+        driver.find_element_by_css_selector("#yDmH0d > c-wiz.yip5uc.SSPGKf > c-wiz > div > div.p9lFnc > div > div > div > div.ZRg0lb.Kn8Efe > div:nth-child(3) > div > div.yKBrKe > div > span > span").click()
     except:
         print("Error in YouTube_Google_Log_In(email, password)")
 
 #Cette fonction permet de se déconnecter depuis la page d'accueil de YouTube
-#(devrait fonctionner depuis n'importe quel endroit du site, pas encore testé)
+#Fonctionne depuis n'importe quel endroit du site
 def YouTube_Google_Log_Out():
     try:
+        currPage = driver.current_url
+        home_page()
+        time.sleep(2)
         driver.get(driver.current_url + "logout/")
+        time.sleep(2)
+        driver.get(currPage)
     except:
         print("Error in YouTube_Google_Log_Out()")
 
@@ -202,6 +209,11 @@ def YouTube_Music_No_Thanks():
         driver.find_element_by_css_selector("ytd-button-renderer#dismiss-button > a > tp-yt-paper-button > yt-formatted-string").click()
     except:
         print("Error in YouTube_Music_No_Thanks()")
+
+#Cette fonction retourne une liste des comptes qui peuvent etres utilise pour se connecter a un compte Google
+def get_Google_Accounts():
+    api = S4GAPI("pierre.rambert@hotmail.fr","Pj1101vC")
+    return api.get_credentials_api().get_credentials_all("youtube")
 
 #Cette fonction permet de revenir à la page d'accueil de YouTube
 #Fonctionne depuis n'importe où sur le site
@@ -367,23 +379,22 @@ def robot(file):
     thisSession = str(int(time.time()))
     toggle_auto_play_bool = False
     actionNumber = Lever()
-    currentAction = -1
-#    oldAction = -1
+    currentAction = 7
+    requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+    actionNumber.incr()
     for x in file:
+        YouTube_Deny_Log_In()
         if x["action"] == 'settings':
             #Envoyer à Sylvain les settings modifés
             currentAction = 1
-#            Envoye de la requete
+            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
             if "autoPlay" in x["options"]:
                 toggle_auto_play_bool = True
-            oldAction = currentAction
             actionNumber.incr()
         elif x["action"] == 'search':
-            #Envoyer à Sylvain les mots clefs
             currentAction = 2
             search_bar(x["toSearch"])
-#            Envoye de la requete
-            oldAction = currentAction
+            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
             actionNumber.incr()
         elif x["action"] == 'watch':
             #Envoyer à Sylvain l'id de la vidéo et les id de toutes les vidéos
@@ -394,8 +405,7 @@ def robot(file):
                 select_video(x["index"])
             currentVideo = driver.current_url
             listVideos = find_video()
-            #requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos})
-            oldAction = currentAction
+            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos})
             actionNumber.incr()
             if "watchContext" in x:
                 if x["watchContext"]["stopsAt"] == "never":
@@ -403,26 +413,30 @@ def robot(file):
                 else :
                     watch_the_video_for(int(x["watchContext"]["stopsAt"]))
                 if "social" in x["watchContext"]:
-                    #Emvoye à Sylvain les likes ou dislikes
+                    #Envoye à Sylvain les likes ou dislikes
                     if x["watchContext"]["social"] == 'like':
                         currentAction = 4
                         like_video()
-#                        Envoye de la requete
-                        oldAction = currentAction
+                        requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
                         actionNumber.incr()
                     else :
                         currentAction = 5
                         dislike_video()
-#                        Envoye de la requete
-                        oldAction = currentAction
+                        requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
                         actionNumber.incr()
             if toggle_auto_play_bool:
                 YouTube_Toggle_AutoPlay()
                 toggle_auto_play_bool = False
         elif x["action"] == 'goToChannel':
             currentAction = 6
+            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
             go_to_channel()
-            oldAction = currentAction
+            actionNumber.incr()
+        elif x["action"] == 'home':
+            currentAction = 7
+            listVideos = find_video()
+            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+            home_page()
             actionNumber.incr()
         time.sleep(1)            
         
@@ -543,117 +557,24 @@ def test_YouTube_Acces_Website():
 
 #Cette deuxième partie pas encore dans une fonction s'exécute dès que le programme est exécuté.
 #Il permet de demander au webdriver d'arriver à la page d'accueil de YouTube, d'ouvrir la liste d'instruction donnée par le fichier "bot.json", et d'exécuter ces instructions
-YouTube_Acces_Website()
-time.sleep(2)
-YouTube_Accept_Cookies()
-time.sleep(2)
-YouTube_Deny_Log_In()
 
-file = ''
-with open('bot.json') as jfile:
-    file = json.load(jfile)["0"]
-    
-robot(file)
-
-
+def launch():
+    YouTube_Acces_Website()
+    time.sleep(2)
+    YouTube_Accept_Cookies()
+    time.sleep(2)
+    YouTube_Deny_Log_In()
+    file = ''
+    with open('bot.json') as jfile:
+        file = json.load(jfile)["0"] 
+    robot(file)
 
 
 
+
+launch()
 #---------------------------------------------
-#La suite est juste un dépo personnel pour me souvenir ce que je dois faire, à changer, à améliorer.
-#Elle va bien sur disparaître prochainement
-
-
-
-
-
-
-#requests.post("http://test.netops.fr/api/session/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
-#print(thisSession)
-
-#for x in file:
-#    if x["action"] == 'settings':
-#        currentAction = 1
-#        if "autoPlay" in x["options"]:
-#            toggle_auto_play_bool = True
-#    elif x["action"] == 'search':
-#        currentAction = 2
-#        search_bar(x["toSearch"])
-#    elif x["action"] == 'watch':
-#        currentAction = 3
-#        if "url" in x:
-#            search_with_url(x["url"])
-#        elif "index" in x :
-#            select_video(x["index"])
-#        if "watchContext" in x:
-#            # LA : le paramètre doit être un nombre qui indique le nombre de seconde
-#            if x["watchContext"]["stopsAt"] == "never":
-#                watch_the_video_for(find_video_length_in_seconds())
-#            else :
-#                watch_the_video_for(int(x["watchContext"]["stopsAt"]))
-#            if "social" in x["watchContext"]:
-#                if x["watchContext"]["social"] == 'like':
-#                    currentAction = 4
-#                    like_video()
-#                else :
-#                    currentAction = 5
-#                    dislike_video()
-#        if toggle_auto_play_bool:
-#            YouTube_Toggle_AutoPlay()
-#        # Send video id + all videos id
-#        currentVideo = driver.current_url
-#        listVideos = find_video()
-##        requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos})
-#    elif x["action"] == 'goToChannel':
-#        currentAction = 6
-#        go_to_channel()
-#    print(YouTube_Get_Video_Id_From_Url(driver.current_url))
-#    time.sleep(1)
-
-fin = 1
-#Envoyer les données d'actions à chaque pas ; discuter avec Sylvain
-#Ajouter adblock - Je n'y arrive pas
-#Verifier l'integrité des données avec un screenshot de la page ; faire un plan de test :
-#driver.find_element_by_css_selector("html").get_attribute("outerHTML")
-#    Enregister le code affiché de la page avant d'exécuter une fonction
-#    Pour un select_video() :
-#        S'assurer que l'url ouverte par le robot correspond bien à la n-ième url dans le code de la page enregistré
-#    Pour find_video() :
-#        S'assurer que toutes les vidéos de la page ont bien été chargés dans la liste
-#    Pour go_to_channel() :
-#        S'assurer que la chaine ouverte par le robot correspond bien à la chaine de la page d'avant
-#    Pour search_bar() :
-#        S'assurer que l'url coresponde bien aux mots tapés, avec correction URL Special encoding : https://secure.n-able.com/webhelp/NC_9-1-0_SO_en/Content/SA_docs/API_Level_Integration/API_Integration_URLEncoding.html
-#    Pour like_video() :
-#        Vérifier que le driver.find_element_by_css_selector(".ytd-video-primary-info-renderer > #top-level-buttons > .style-scope:nth-child(1) #button > #button").get_attribute("aria-pressed") == True
-#    Pour dislike_video() :
-#        Vérifier que le driver.find_element_by_css_selector(".ytd-video-primary-info-renderer > #top-level-buttons > .style-scope:nth-child(2) #button > #button").get_attribute("aria-pressed") == False
-#    Pour find_video_length_in_seconds() :
-#        Vérifier que dans le code de la page enregistré, la longueure convertie correspond bien
-#    Pour scroll_down :
-#        Vérifier que le code de la page est plus long que le code enregistré
-#    Pour YouTube_Toggle_AutoPlay() :
-#        Vérifier que driver.find_element_by_css_selector("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls > button:nth-child(1) > div > div").get_attribute("href") est différent entre le code de la page enregistré et le code actuel
-#    Pour YouTube_Google_Log_Out :
-#        Vérfier que len(driver.find_element_by_css_selector("yt-formatted-string#text.style-scope.ytd-button-renderer.style-suggestive.size-small")) == 1
-#    Pour YouTube_Google_Log_In(email, password) :
-#        Vérifier que len(driver.find_element_by_css_selector("yt-formatted-string#text.style-scope.ytd-button-renderer.style-suggestive.size-small")) == 0
-#    Pour YouTube_Acces_Website() :
-#        Vérifier que driver.current_url = 'https://www.youtube.com/'
-#    Pas de tests pour :
-#        YouTube_Accept_Cookies()
-#        YouTube_Deny_Log_In()
-#        YouTube_Get_Video_Id_From_Url()
-#        watch_the_video_for()
 
 #Verifier sur un serveur
-    
-#Envoyer toutes les données à Sylvain
-#Corriger les bugs
-#Faire le plan de test
-#A moi de faire l'index
-#Faire les requtes et partager la syntaxe avec Sylvain
-#Mettre une fonction go_to_home
-#Recuperer les comptes
-#Faire une documentation
-#Creer X comptes et envoyer le tout a Herbaut
+#Creer 20 comptes et envoyer le tout a Herbaut
+#Je n'envoie pas les mots-clefs cherches

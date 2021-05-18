@@ -1,0 +1,8 @@
+installer les modules :
+	s4gpy
+	undetected_chromedriver.v2
+	bs4
+	selenium
+Mettre dans le dossier :
+	Le chromedriver
+	Le bot
