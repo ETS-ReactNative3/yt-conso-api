@@ -400,7 +400,7 @@ def robot(file):
             search_bar(x["toSearch"])
             time.sleep(2)
             listVideos = find_video()
-            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "key_word" : x["toSearch"]})
             actionNumber.incr()
         elif x["action"] == 'watch':
             #Envoyer à Sylvain l'id de la vidéo et les id de toutes les vidéos
@@ -575,8 +575,34 @@ def launch():
     time.sleep(2)
     YouTube_Deny_Log_In()
     file = ''
-    with open('bot.json') as jfile:
-        file = json.load(jfile)["0"] 
+#    with open('bot.json') as jfile:
+#        file = json.load(jfile)["0"]
+    url = "http://127.0.0.1:10001/generate"
+    payload = json.dumps({
+      "type": "conspi",
+      "watchNext": "15",
+      "watchFromURL": "0",
+      "watchFromHome": "10",
+      "search": "conspi",
+      "watchFromSearch": "5",
+      "watchFromChannel": "5",
+      "watchRecommended": "15",
+      "stopsAt": "5",
+      "social": "like",
+      "interactionPercent": "50",
+      "order": [
+        "home",
+        "next",
+        "search",
+        "channel",
+        "recommended"
+      ]
+    })
+    headers = {
+      'Content-Type': 'application/json'
+    }
+    response = requests.request("GET", url, headers=headers, data=payload)
+    file = response.text
     robot(file)
 
 
@@ -590,3 +616,4 @@ launch()
 #Je n'envoie pas les mots-clefs cherches
 
 #mettre l'adresse d'envoie en valeur
+#envoyer les mots_clefs
