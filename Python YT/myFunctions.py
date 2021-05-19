@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #Ce script contient l'ensemble des fonctions qui permet de naviguer automatiquement et de manière controlée sur le web
 #Particulièrement, il est utilisé pour naviguer et scrapper YouTube
 #Voici la liste des fonctions :
@@ -380,6 +382,8 @@ def robot(file):
     toggle_auto_play_bool = False
     actionNumber = Lever()
     currentAction = 7
+    time.sleep(2)
+    listVideos = find_video()
     requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
     actionNumber.incr()
     for x in file:
@@ -394,6 +398,8 @@ def robot(file):
         elif x["action"] == 'search':
             currentAction = 2
             search_bar(x["toSearch"])
+            time.sleep(2)
+            listVideos = find_video()
             requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
             actionNumber.incr()
         elif x["action"] == 'watch':
@@ -404,6 +410,7 @@ def robot(file):
             elif "index" in x :
                 select_video(x["index"])
             currentVideo = driver.current_url
+            time.sleep(2)
             listVideos = find_video()
             requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos})
             actionNumber.incr()
@@ -416,6 +423,7 @@ def robot(file):
                     #Envoye à Sylvain les likes ou dislikes
                     if x["watchContext"]["social"] == 'like':
                         currentAction = 4
+                        time.sleep(2)
                         like_video()
                         requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
                         actionNumber.incr()
@@ -429,8 +437,10 @@ def robot(file):
                 toggle_auto_play_bool = False
         elif x["action"] == 'goToChannel':
             currentAction = 6
-            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
             go_to_channel()
+            time.sleep(2)
+            listVideos = find_video()
+            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
             actionNumber.incr()
         elif x["action"] == 'home':
             currentAction = 7
@@ -438,9 +448,9 @@ def robot(file):
             requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
             home_page()
             actionNumber.incr()
-        time.sleep(1)            
-        
-
+        time.sleep(1)
+    time.sleep(10)
+    driver.quit()
 
 
 
@@ -578,3 +588,5 @@ launch()
 #Verifier sur un serveur
 #Creer 20 comptes et envoyer le tout a Herbaut
 #Je n'envoie pas les mots-clefs cherches
+
+#mettre l'adresse d'envoie en valeur
