@@ -95,7 +95,7 @@ opt.add_argument("--ignore-ssl-errors=yes")
 opt.add_argument("--window-size=1280,720")
 opt.add_argument("--ignore-certificate-errors")
 opt.add_argument("--disable-dev-shm-usage")
-opt.add_extension("./extension_1_35_2_0.crx")
+#opt.add_extension("./extension_1_35_2_0.crx")
 #opt.add_extension("extension_1_35_2_0.crx")
 caps['goog:loggingPrefs'] = { 'browser':'ALL' }
 
@@ -369,8 +369,17 @@ def search_bar(text):
 
 def t():
     thisSession = str(int(time.time()))
+    print(thisSession)
     urlForDB = "test.netops.fr"
     a = requests.post("http://"+ urlForDB + "/api/session/new",headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
+    print(a)
+    actionNumber = Lever()
+    currentAction = 7
+    print(currentAction)
+    time.sleep(2)
+    listVideos = find_video()
+    print(listVideos)
+    a = requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
     print(a)
 
 #Paramètre :
@@ -635,3 +644,4 @@ def launch():
 #Diviser toggle autoplay en 2 fonctions distinctes
 #Recuperer le login et logout dans le script --> Ajouter des branches au robot
 #Ne pas appuyer sur like et dislike quand pas connecte
+#Faire un dessin du fonctionnement du robot
