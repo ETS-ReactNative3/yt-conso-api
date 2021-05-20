@@ -288,7 +288,7 @@ def select_video(n=0):
             print("channel")
             driver.find_elements_by_css_selector("#items > ytd-grid-video-renderer")[n].click()
     except:
-        print("Error in select_video()")
+        print("Error in select_video() / " + driver.current_url + " / " + str(n))
 
 
 #Return :
@@ -367,6 +367,12 @@ def search_bar(text):
         print("Error in search_bar()")
 
 
+def t():
+    thisSession = str(int(time.time()))
+    urlForDB = "test.netops.fr"
+    a = requests.post("http://"+ urlForDB + "/api/session/new",headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
+    print(a)
+
 #Paramètre :
 #    List    x   Une liste contenant des dictionnaires, correspondant aux actions que doit exécute le script
 #Cette fonction permet de lire une liste et d'exécuter les instructions stockées dans des dictionnaires.
@@ -380,12 +386,15 @@ def search_bar(text):
 def robot(file):
     urlForDB = "test.netops.fr"
     thisSession = str(int(time.time()))
+    a = requests.post("http://"+ urlForDB + "/api/session/new",headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
+    print(a)
     toggle_auto_play_bool = False
     actionNumber = Lever()
     currentAction = 7
     time.sleep(2)
     listVideos = find_video()
-    requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+    a = requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+    print(a)
     actionNumber.incr()
     for x in file:
         YouTube_Deny_Log_In()
@@ -406,6 +415,8 @@ def robot(file):
         elif x["action"] == 'watch':
             #Envoyer à Sylvain l'id de la vidéo et les id de toutes les vidéos
             currentAction = 3
+            index = -1
+            videoLever = True
             if "url" in x:
                 search_with_url(x["url"])
             elif "index" in x :
@@ -422,13 +433,14 @@ def robot(file):
                     watch_the_video_for(int(x["watchContext"]["stopsAt"]))
                 if "social" in x["watchContext"]:
                     #Envoye à Sylvain les likes ou dislikes
-                    if x["watchContext"]["social"] == 'like':
+#                    if x["watchContext"]["social"] == 'like':
+                    if False:
                         currentAction = 4
                         time.sleep(2)
                         like_video()
                         requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
                         actionNumber.incr()
-                    else :
+#                    else :
                         currentAction = 5
                         dislike_video()
                         requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
@@ -578,7 +590,7 @@ def launch():
     file = ''
 #    with open('bot.json') as jfile:
 #        file = json.load(jfile)["0"]
-    url = "http://127.0.0.1:10001/generate"
+    url = "https://scriptgenyoutube.miage.dev/generate"
     payload = json.dumps({
       "type": "conspi",
       "watchNext": "15",
@@ -603,15 +615,23 @@ def launch():
       'Content-Type': 'application/json'
     }
     response = requests.request("GET", url, headers=headers, data=payload)
-    file = response.text
+    time.sleep(1)
+    afile = response.text
+    file = json.loads(afile)["actions"]
     robot(file)
 
 
 
 
-launch()
+#launch()
 #---------------------------------------------
 
 #Verifier sur un serveur
 #Creer 20 comptes et envoyer le tout a Herbaut
 #Je n'envoie pas les mots-clefs cherches
+#Faire une boolen pour les like dislikes
+#L'index de la n-ieme video
+#Envoyer l'ordre des actions
+#Diviser toggle autoplay en 2 fonctions distinctes
+#Recuperer le login et logout dans le script --> Ajouter des branches au robot
+#Ne pas appuyer sur like et dislike quand pas connecte
