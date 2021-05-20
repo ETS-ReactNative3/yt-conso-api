@@ -378,20 +378,21 @@ def search_bar(text):
 #    Object          actionNumber        Permet d'avoir un objet qui assure l'incrémentation de l'index de chaque action, pour garder dans la BdD l'odre de déroulement des actions faites par le robot
 #    int         currentAction       Permet de savoir quelle est l'action actuellement réalisée par le robot. Sera envoyée dans la requête à la BdD
 def robot(file):
+    urlForDB = "test.netops.fr"
     thisSession = str(int(time.time()))
     toggle_auto_play_bool = False
     actionNumber = Lever()
     currentAction = 7
     time.sleep(2)
     listVideos = find_video()
-    requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+    requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
     actionNumber.incr()
     for x in file:
         YouTube_Deny_Log_In()
         if x["action"] == 'settings':
             #Envoyer à Sylvain les settings modifés
             currentAction = 1
-            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
+            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
             if "autoPlay" in x["options"]:
                 toggle_auto_play_bool = True
             actionNumber.incr()
@@ -400,7 +401,7 @@ def robot(file):
             search_bar(x["toSearch"])
             time.sleep(2)
             listVideos = find_video()
-            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "key_word" : x["toSearch"]})
+            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "key_word" : x["toSearch"]})
             actionNumber.incr()
         elif x["action"] == 'watch':
             #Envoyer à Sylvain l'id de la vidéo et les id de toutes les vidéos
@@ -412,7 +413,7 @@ def robot(file):
             currentVideo = driver.current_url
             time.sleep(2)
             listVideos = find_video()
-            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos})
+            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos})
             actionNumber.incr()
             if "watchContext" in x:
                 if x["watchContext"]["stopsAt"] == "never":
@@ -425,12 +426,12 @@ def robot(file):
                         currentAction = 4
                         time.sleep(2)
                         like_video()
-                        requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
+                        requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
                         actionNumber.incr()
                     else :
                         currentAction = 5
                         dislike_video()
-                        requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
+                        requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
                         actionNumber.incr()
             if toggle_auto_play_bool:
                 YouTube_Toggle_AutoPlay()
@@ -440,12 +441,12 @@ def robot(file):
             go_to_channel()
             time.sleep(2)
             listVideos = find_video()
-            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
             actionNumber.incr()
         elif x["action"] == 'home':
             currentAction = 7
             listVideos = find_video()
-            requests.post("http://test.netops.fr/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
             home_page()
             actionNumber.incr()
         time.sleep(1)
@@ -614,6 +615,3 @@ launch()
 #Verifier sur un serveur
 #Creer 20 comptes et envoyer le tout a Herbaut
 #Je n'envoie pas les mots-clefs cherches
-
-#mettre l'adresse d'envoie en valeur
-#envoyer les mots_clefs
