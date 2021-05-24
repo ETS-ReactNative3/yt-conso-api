@@ -116,13 +116,13 @@ driver = uc.Chrome(PATH, options=opt, desired_capabilities=caps)
 #    String  password    le mot de passe associé à l'email en paramètres
 #Cette fonction permet de s'identifier avec un email et un mot de passe donnée à partir de la page d'acceuil de YouTube
 #Fonctionne depuis n'importe quel endroit du site
-def YouTube_Google_Log_In(thisLogin=0):
+def YouTube_Google_Log_In(thisLogin):
     try:
         email = 0
         password = 0
         isFound = True
         laccounts = get_Google_Accounts()
-        if thisLogin != 0:
+        if thisLogin != "":
             for x in laccounts:
                 if thisLogin in x:
                     email = x[0]
@@ -195,7 +195,7 @@ def YouTube_Deny_Log_In():
 #Un nombre pair active la lecture automatique de vidéos
 def YouTube_Toggle_AutoPlay(boolean):
     try:
-        if boolean:
+        if boolean == 'True':
             #Regarder si l'auto play est false pour le mettre en true
             isPressed = driver.find_element_by_css_selector("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls > button:nth-child(1) > div > div")
             if isPressed.get_attribute("aria-checked") == "false":
@@ -392,7 +392,7 @@ def t():
     thisSession = str(int(time.time()))
     print(thisSession)
     urlForDB = "test.netops.fr"
-    a = requests.post("http://"+ urlForDB + "/api/session/new",headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
+    a = requests.post("https://"+ urlForDB + "/api/session/new",headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
     print(a)
     actionNumber = Lever()
     currentAction = 7
@@ -400,7 +400,7 @@ def t():
     time.sleep(2)
     listVideos = find_video()
     print(listVideos)
-    a = requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+    a = requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
     print(a)
 
 #Paramètre :
@@ -416,7 +416,7 @@ def t():
 def robot(file):
     urlForDB = "test.netops.fr"
     thisSession = str(int(time.time()))
-    a = requests.post("http://"+ urlForDB + "/api/session/new",headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
+    a = requests.post("https://"+ urlForDB + "/api/session/new",headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
     print(a)
     lets_toggle = False
     isLogedIn = False
@@ -424,7 +424,7 @@ def robot(file):
     currentAction = 7
     time.sleep(2)
     listVideos = find_video()
-    a = requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+    a = requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "position":actionNumber})
     print(a)
     actionNumber.incr()
     for x in file:
@@ -433,16 +433,16 @@ def robot(file):
             #Envoyer à Sylvain les settings modifés
             currentAction = 1
             if "autoPlay" in x["options"]:
-                requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
+                requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "position":actionNumber})
                 actionNumber.incr()
                 YouTube_Toggle_AutoPlay(x["options"]["autoPlay"])
             if "login" in x["options"]:
-                requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "email":x["options"]["login"]})
+                requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "email":x["options"]["login"], "position":actionNumber})
                 actionNumber.incr()
                 #TODO : Recuperer le mdp avec le login et se login avec
                 isLogedIn = True
             if "logout" in x["options"]:
-                requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "email":"log out"})
+                requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "email":"log out", "position":actionNumber})
                 actionNumber.incr()
                 YouTube_Google_Log_Out()
                 isLogedIn = False
@@ -451,7 +451,7 @@ def robot(file):
             search_bar(x["toSearch"])
             time.sleep(2)
             listVideos = find_video()
-            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "key_word" : x["toSearch"]})
+            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "key_word" : x["toSearch"], "position":actionNumber})
             actionNumber.incr()
         elif x["action"] == 'watch':
             #Envoyer à Sylvain l'id de la vidéo et les id de toutes les vidéos
@@ -466,7 +466,7 @@ def robot(file):
             currentVideo = driver.current_url
             time.sleep(2)
             listVideos = find_video()
-            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos, "index":index})
+            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos, "index":index, "position":actionNumber})
             actionNumber.incr()
             if "watchContext" in x:
                 if x["watchContext"]["stopsAt"] == "never":
@@ -480,24 +480,24 @@ def robot(file):
                             currentAction = 4
                             time.sleep(2)
                             like_video()
-                            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
+                            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction,"position":actionNumber})
                             actionNumber.incr()
                         else :
                             currentAction = 5
                             dislike_video()
-                            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
+                            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "position":actionNumber})
                             actionNumber.incr()
         elif x["action"] == 'goToChannel':
             currentAction = 6
             go_to_channel()
             time.sleep(2)
             listVideos = find_video()
-            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "position":actionNumber})
             actionNumber.incr()
         elif x["action"] == 'home':
             currentAction = 7
             listVideos = find_video()
-            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos})
+            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "position":actionNumber})
             home_page()
             actionNumber.incr()
         time.sleep(1)
@@ -630,6 +630,7 @@ def launch():
 #    with open('bot.json') as jfile:
 #        file = json.load(jfile)["0"]
     url = "https://scriptgenyoutube.miage.dev/generate"
+    #Recuperer le json dans le payload avec un request a un front end
     payload = json.dumps({
       "type": "conspi",
       "watchNext": "15",
@@ -666,4 +667,9 @@ def launch():
 #---------------------------------------------
 
 #Verifier sur un serveur
-#Creer 20 comptes et envoyer le tout a Herbaut
+#FAIRE DES TESTS SUR select_video() !!
+#Pour la mise sur serveur :
+#    Faire en sorte de pouvoir recuperer le json de lecture
+#    Avoir des logs d'erreurs
+#Envoyer la duree de visionnage de la video en secondes
+#Refaire un script qui est joli visuellement
