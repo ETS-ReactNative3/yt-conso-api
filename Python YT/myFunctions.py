@@ -116,12 +116,24 @@ driver = uc.Chrome(PATH, options=opt, desired_capabilities=caps)
 #    String  password    le mot de passe associé à l'email en paramètres
 #Cette fonction permet de s'identifier avec un email et un mot de passe donnée à partir de la page d'acceuil de YouTube
 #Fonctionne depuis n'importe quel endroit du site
-def YouTube_Google_Log_In():
+def YouTube_Google_Log_In(thisLogin=0):
     try:
+        email = 0
+        password = 0
+        isFound = True
         laccounts = get_Google_Accounts()
-        selectTupple = laccounts[random.randrange(len(laccounts))]
-        email = selectTupple[0]
-        password = selectTupple[1]
+        if thisLogin != 0:
+            for x in laccounts:
+                if thisLogin in x:
+                    email = x[0]
+                    password = x[1]
+                    isFound = False
+            if isFound:
+                thisLogin == 0            
+        elif thisLogin == 0:
+            selectTupple = laccounts[random.randrange(len(laccounts))]
+            email = selectTupple[0]
+            password = selectTupple[1]
         driver.find_element_by_css_selector("#end > #buttons > ytd-button-renderer > a").click()
         emailInput = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#identifierId")))
         emailInput.send_keys(email)
@@ -181,11 +193,20 @@ def YouTube_Deny_Log_In():
 #Cette fonction permet de cliquer sur le bouton auto-play
 #Auto-play est un bouton qui agit comme un toggle ; étant activé par défaut, un nombre impair de cliques empêche la lecture automatique de vidéos.
 #Un nombre pair active la lecture automatique de vidéos
-def YouTube_Toggle_AutoPlay():
+def YouTube_Toggle_AutoPlay(boolean):
     try:
-        driver.find_element_by_css_selector("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls > button:nth-child(1) > div > div").click()
+        if boolean:
+            #Regarder si l'auto play est false pour le mettre en true
+            isPressed = driver.find_element_by_css_selector("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls > button:nth-child(1) > div > div")
+            if isPressed.get_attribute("aria-checked") == "false":
+                isPressed.click()
+        else:
+            #Regarder si l'auto play est true pour le mettre en false
+            isPressed = driver.find_element_by_css_selector("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls > button:nth-child(1) > div > div")
+            if isPressed.get_attribute("aria-checked") == "true":
+                isPressed.click()
     except:
-        print("Error in YouTube_Toggle_AutoPlay()")
+        print("Error in YouTube_Toggle_AutoPlay(boolean)")
 
 
 #Paramètre :
@@ -397,7 +418,8 @@ def robot(file):
     thisSession = str(int(time.time()))
     a = requests.post("http://"+ urlForDB + "/api/session/new",headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
     print(a)
-    toggle_auto_play_bool = False
+    lets_toggle = False
+    isLogedIn = False
     actionNumber = Lever()
     currentAction = 7
     time.sleep(2)
@@ -410,10 +432,20 @@ def robot(file):
         if x["action"] == 'settings':
             #Envoyer à Sylvain les settings modifés
             currentAction = 1
-            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
             if "autoPlay" in x["options"]:
-                toggle_auto_play_bool = True
-            actionNumber.incr()
+                requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
+                actionNumber.incr()
+                YouTube_Toggle_AutoPlay(x["options"]["autoPlay"])
+            if "login" in x["options"]:
+                requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "email":x["options"]["login"]})
+                actionNumber.incr()
+                #TODO : Recuperer le mdp avec le login et se login avec
+                isLogedIn = True
+            if "logout" in x["options"]:
+                requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "email":"log out"})
+                actionNumber.incr()
+                YouTube_Google_Log_Out()
+                isLogedIn = False
         elif x["action"] == 'search':
             currentAction = 2
             search_bar(x["toSearch"])
@@ -430,33 +462,31 @@ def robot(file):
                 search_with_url(x["url"])
             elif "index" in x :
                 select_video(x["index"])
+                index = x["index"]
             currentVideo = driver.current_url
             time.sleep(2)
             listVideos = find_video()
-            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos})
+            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos, "index":index})
             actionNumber.incr()
             if "watchContext" in x:
                 if x["watchContext"]["stopsAt"] == "never":
                     watch_the_video_for(find_video_length_in_seconds())
                 else :
                     watch_the_video_for(int(x["watchContext"]["stopsAt"]))
-                if "social" in x["watchContext"]:
-                    #Envoye à Sylvain les likes ou dislikes
-#                    if x["watchContext"]["social"] == 'like':
-                    if False:
-                        currentAction = 4
-                        time.sleep(2)
-                        like_video()
-                        requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
-                        actionNumber.incr()
-#                    else :
-                        currentAction = 5
-                        dislike_video()
-                        requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
-                        actionNumber.incr()
-            if toggle_auto_play_bool:
-                YouTube_Toggle_AutoPlay()
-                toggle_auto_play_bool = False
+                if isLogedIn:
+                    if "social" in x["watchContext"]:
+                        #Envoye à Sylvain les likes ou dislikes
+                        if x["watchContext"]["social"] == 'like':
+                            currentAction = 4
+                            time.sleep(2)
+                            like_video()
+                            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
+                            actionNumber.incr()
+                        else :
+                            currentAction = 5
+                            dislike_video()
+                            requests.post("http://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction})
+                            actionNumber.incr()
         elif x["action"] == 'goToChannel':
             currentAction = 6
             go_to_channel()
@@ -637,11 +667,3 @@ def launch():
 
 #Verifier sur un serveur
 #Creer 20 comptes et envoyer le tout a Herbaut
-#Je n'envoie pas les mots-clefs cherches
-#Faire une boolen pour les like dislikes
-#L'index de la n-ieme video
-#Envoyer l'ordre des actions
-#Diviser toggle autoplay en 2 fonctions distinctes
-#Recuperer le login et logout dans le script --> Ajouter des branches au robot
-#Ne pas appuyer sur like et dislike quand pas connecte
-#Faire un dessin du fonctionnement du robot
