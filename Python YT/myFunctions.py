@@ -3,7 +3,7 @@
 #Ce script contient l'ensemble des fonctions qui permet de naviguer automatiquement et de manière controlée sur le web
 #Particulièrement, il est utilisé pour naviguer et scrapper YouTube
 #Voici la liste des fonctions :
-#    YouTube_Google_Log_In(email, password)
+#    YouTube_Google_Log_In(thisLogin)
 #    YouTube_Google_Log_Out()
 #    YouTube_Acces_Website()
 #    YouTube_Accept_Cookies()
@@ -290,26 +290,44 @@ def find_video():
 #Permet de visionner la n-ième vidéo sur la page. Fonctionne sur la page d'accueil, après une recherche dans l'outil de recherche YouTube, depuis une vidéo ou depuis l'onglet vidéo d'une chaine YouTube.
 #Si aucun paramètre n'est donné, c'est la toute première vidéo qui est visionnée
 def select_video(n=0):
-    try:
-        currUrl = driver.current_url
-        if currUrl == "https://www.youtube.com/":
-            # From homepage
-            print("homepage")
-            driver.find_elements_by_css_selector("#contents > ytd-rich-item-renderer")[n].click()
-        elif "watch?v=" in currUrl:
-            # From a watching video
-            print("video")
-            driver.find_elements_by_css_selector("#items > ytd-compact-video-renderer")[n].click()
-        elif "results?search_query=" in currUrl:
-            # From a search
-            print("search")
-            driver.find_elements_by_css_selector("#contents > ytd-video-renderer > #dismissible > ytd-thumbnail")[n].click()
-        else:
-            # From a video tab from a channel
-            print("channel")
-            driver.find_elements_by_css_selector("#items > ytd-grid-video-renderer")[n].click()
-    except:
-        print("Error in select_video() / " + driver.current_url + " / " + str(n))
+    # Ajouter une clause IndexError
+    currUrl = driver.current_url
+    if currUrl == "https://www.youtube.com/":
+        # From homepage
+        print("homepage")
+        driver.find_elements_by_css_selector("#contents > ytd-rich-item-renderer")[n].click()
+    elif "watch?v=" in currUrl:
+        # From a watching video
+        print("video")
+        driver.find_elements_by_css_selector("#items > ytd-compact-video-renderer")[n].click()
+    elif "results?search_query=" in currUrl:
+        # From a search
+        print("search")
+        driver.find_elements_by_css_selector("#contents > ytd-video-renderer > #dismissible > ytd-thumbnail")[n].click()
+    else:
+        # From a video tab from a channel
+        print("channel")
+        driver.find_elements_by_css_selector("#items > ytd-grid-video-renderer")[n].click()
+#    try:
+#        currUrl = driver.current_url
+#        if currUrl == "https://www.youtube.com/":
+#            # From homepage
+#            print("homepage")
+#            driver.find_elements_by_css_selector("#contents > ytd-rich-item-renderer")[n].click()
+#        elif "watch?v=" in currUrl:
+#            # From a watching video
+#            print("video")
+#            driver.find_elements_by_css_selector("#items > ytd-compact-video-renderer")[n].click()
+#        elif "results?search_query=" in currUrl:
+#            # From a search
+#            print("search")
+#            driver.find_elements_by_css_selector("#contents > ytd-video-renderer > #dismissible > ytd-thumbnail")[n].click()
+#        else:
+#            # From a video tab from a channel
+#            print("channel")
+#            driver.find_elements_by_css_selector("#items > ytd-grid-video-renderer")[n].click()
+#    except:
+#        print("Error in select_video() / " + driver.current_url + " / " + str(n))
 
 
 #Return :
@@ -437,6 +455,7 @@ def robot(file):
                 actionNumber.incr()
                 YouTube_Toggle_AutoPlay(x["options"]["autoPlay"])
             if "login" in x["options"]:
+                YouTube_Google_Log_In(x["options"]["login"])
                 requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "email":x["options"]["login"], "position":actionNumber})
                 actionNumber.incr()
                 #TODO : Recuperer le mdp avec le login et se login avec
@@ -496,9 +515,9 @@ def robot(file):
             actionNumber.incr()
         elif x["action"] == 'home':
             currentAction = 7
+            home_page()
             listVideos = find_video()
             requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "position":actionNumber})
-            home_page()
             actionNumber.incr()
         time.sleep(1)
     time.sleep(10)
