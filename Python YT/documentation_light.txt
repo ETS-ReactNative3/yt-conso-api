@@ -1,7 +1,7 @@
 Ce script contient l'ensemble des fonctions qui permet de naviguer automatiquement et de manière controlée sur le web
 Particulièrement, il est utilisé pour naviguer et scrapper YouTube
 Voici la liste des fonctions :
-    YouTube_Google_Log_In(email, password)
+    YouTube_Google_Log_In(email)
     YouTube_Google_Log_Out()
     YouTube_Acces_Website()
     YouTube_Accept_Cookies()
@@ -40,11 +40,10 @@ Voici la liste du code qui n'est pas dans des fonctions :
     Ligne 544 à 556
 
 
-YouTube_Google_Log_In(email, password)
+YouTube_Google_Log_In(email)
     Paramètres :
         String  email       l'email du compte avec lequel on veut se loger
-        String  password    le mot de passe associé à l'email en paramètres
-    Cette fonction permet de s'identifier avec un email et un mot de passe donnée à partir de la page d'acceuil de YouTube
+    Cette fonction permet de recuperer un identifiant de connexion pour se connecter a un compte Google, puis revenir a la page d'acceuil de YouTube
     (Elle devrait permettre de se loger depuis n'importe quel endroit du site, pas encore testé)
 
 YouTube_Google_Log_Out()

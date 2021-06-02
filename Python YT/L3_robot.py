@@ -21,7 +21,7 @@ import json
 import requests
 import urllib.parse
 
-PATH = r"C:\chromedriver.exe"
+PATH = r"C:\chromedriver\90\chromedriver.exe"
 opt = webdriver.ChromeOptions()
 caps = webdriver.DesiredCapabilities.CHROME.copy()
 opt.add_argument("--no-sandbox")
@@ -33,6 +33,7 @@ opt.add_argument("--ignore-certificate-errors")
 opt.add_argument("--disable-dev-shm-usage")
 caps['goog:loggingPrefs'] = { 'browser':'ALL' }
 driver = uc.Chrome(PATH, options=opt, desired_capabilities=caps)
+#driver = uc.Chrome()
 
 def YouTube_Google_Log_In(thisLogin):
     try:
@@ -65,8 +66,9 @@ def YouTube_Google_Log_In(thisLogin):
         time.sleep(0.5)
         #driver.find_element_by_css_selector("#yDmH0d > c-wiz > div > div > div > div.L5MEH.Bokche.ypEC4c > div.lq3Znf > div.U26fgb.O0WRkf.oG5Srb.HQ8yf.C0oVfc.Zrq4w.WIL89.k97fxb.yu6jOd.M9Bg4d.j7nIZb > span > span").click()
         driver.find_element_by_css_selector("#yDmH0d > c-wiz.yip5uc.SSPGKf > c-wiz > div > div.p9lFnc > div > div > div > div.ZRg0lb.Kn8Efe > div:nth-child(3) > div > div.yKBrKe > div > span > span").click()
+        return email
     except:
-        print("Error in YouTube_Google_Log_In(email, password)")
+        print("Error in YouTube_Google_Log_In(email)")
 
 def YouTube_Google_Log_Out():
     try:
@@ -190,6 +192,8 @@ def select_video(n=0):
             driver.find_elements_by_css_selector("#items > ytd-grid-video-renderer")[n].click()
     except:
         time.sleep(2)
+        print("I'm trying to click on a video")
+        scrollDown()
         select_video(n)
 
 
@@ -247,29 +251,56 @@ def search_bar(text):
         print("Error in search_bar()")
 
 def robot(file):
+    urlForDB = "test.netops.fr"
+    thisSession = str(int(time.time()))
+    requests.post("https://"+ urlForDB + "/api/session/new",headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"id":thisSession})
     lets_toggle = False
     isLogedIn = False
+    actionNumber = Lever()
+    currentAction = 7
     time.sleep(2)
     listVideos = find_video()
+    print("Where's the list of all the videos on this page (*~▽~) :")
+    for x in listVideos:
+        print("\t"+str(x))
+    a = requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "position":actionNumber.get()})
+    actionNumber.incr()
     for x in file:
         YouTube_Deny_Log_In()
         if x["action"] == 'settings':
+            currentAction = 1
             print("Let's change some settings ⊂((・▽・))⊃")
             if "autoPlay" in x["options"]:
                 print("Auto Play is set to : " + str(x["options"]["autoPlay"]) + " ヾ(*´∀｀*)ﾉ")
+                requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "position":actionNumber.get()})
+                actionNumber.incr()
                 YouTube_Toggle_AutoPlay(x["options"]["autoPlay"])
             if "login" in x["options"]:
                 print("We'll soon log in (=^▽^=)")
+                logEmail = YouTube_Google_Log_In(x["options"]["login"])
+                requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "email":logEmail, "position":actionNumber.get()})
+                actionNumber.incr()
+                
                 isLogedIn = True
             if "logout" in x["options"]:
                 print("We're login out ! °˖✧◝(^▿^)◜✧˖°")
+                requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "email":"log out", "position":actionNumber.get()})
+                actionNumber.incr()
                 YouTube_Google_Log_Out()
                 isLogedIn = False
         elif x["action"] == 'search':
             print("Let's search for : " + str(x["toSearch"]) + " ー( ´ ▽ ` )ﾉ")
+            currentAction = 2
             search_bar(x["toSearch"])
+            time.sleep(2)
             listVideos = find_video()
+            print("Where's the list of all the videos on this page (*~▽~) :")
+            for x in listVideos:
+                print("\t"+str(x))
+            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "key_word" : x["toSearch"], "position":actionNumber.get()})
+            actionNumber.incr()
         elif x["action"] == 'watch':
+            currentAction = 3
             index = -1
             videoLever = True
             if "url" in x:
@@ -279,12 +310,19 @@ def robot(file):
                 print("Let's watch the video number : " + str(x["index"]) + " on this page ヾ(＾∇＾)")
                 select_video(x["index"])
                 index = x["index"]
+            else:
+                print("Let's watch the video number : 1 on this page ヾ(＾∇＾)")
+                select_video()
+                index = 1
             time.sleep(2)
             currentVideo = driver.current_url
+            time.sleep(2)
             listVideos = find_video()
             print("Where's the list of all the videos on this page (*~▽~) :")
             for x in listVideos:
                 print("\t"+str(x))
+            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"currentVideo":YouTube_Get_Video_Id_From_Url(currentVideo),"action":currentAction, "videos":listVideos, "index":index, "position":actionNumber.get()})
+            actionNumber.incr()
             if "watchContext" in x:
                 if x["watchContext"]["stopsAt"] == "never":
                     print("We're going to watch it 'til the end ! (*⌒∇⌒*)")
@@ -297,21 +335,40 @@ def robot(file):
                         #Envoye à Sylvain les likes ou dislikes
                         if x["watchContext"]["social"] == 'like':
                             print("I like it !! (ᗒᗊᗕ)")
+                            currentAction = 4
                             like_video()
+                            time.sleep(2)
+                            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction,"position":actionNumber.get()})
+                            actionNumber.incr()
                         else :
                             print("It wasn't great thought ... (๑꒪▿꒪)*")
+                            currentAction = 5
                             dislike_video()
+                            time.sleep(2)
+                            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction,"position":actionNumber.get()})
+                            actionNumber.incr()
         elif x["action"] == 'goToChannel':
             print("Intresting ! Let's visit this channel ~ヾ(＾∇＾)")
+            currentAction = 6
             go_to_channel()
             time.sleep(2)
             listVideos = find_video()
             print("Where's the list of all the videos on this page (*~▽~) :")
             for x in listVideos:
                 print("\t"+str(x))
+            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "position":actionNumber.get()})
+            actionNumber.incr()
         elif x["action"] == 'home':
             print("Let's go back to homepage (＾▽＾)")
+            currentAction = 7
             home_page()
+            time.sleep(2)
+            listVideos = find_video()
+            print("Where's the list of all the videos on this page (*~▽~) :")
+            for x in listVideos:
+                print("\t"+str(x))
+            requests.post("https://"+ urlForDB + "/api/log/new", headers={"accept":"application/ld+json","Content-Type": "application/ld+json"}, json={"session":thisSession,"action":currentAction, "videos":listVideos, "position":actionNumber.get()})
+            actionNumber.incr()
         time.sleep(2)
     time.sleep(10)
     print("Fiouf, it's the end of our journey, hope you like it （⌒▽⌒ゞ")
@@ -362,3 +419,9 @@ def launch():
     print(r"We're all set, let's go ! \(*≧∇≦*)/")
     time.sleep(1)
     robot(file)
+
+
+
+
+
+#launch()
